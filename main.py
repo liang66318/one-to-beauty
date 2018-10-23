@@ -77,14 +77,14 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 		
 		self.response.out.write(upload_item+"<br>"+upload_amount+"<br>"+upload_total+"<br>"+upload_buyer+"<br>")
 		
-		var b_upload_moneyin = false;
-		var b_upload_sold = false;
+		b_upload_moneyin = False;
+		b_upload_sold = False;
 		if (upload_moneyin == "on"):
-			b_upload_moneyin = true;
+			b_upload_moneyin = True;
 		if (upload_sold == "on"):
-			b_upload_sold = true;
+			b_upload_sold = True;
 		
-		product = ItemData(item=upload_item, amount=int(upload_amount), total=int(upload_total), moneyin=b_upload_moneyin, sold=b_upload_sold, buyer=upload_buyer)
+		product = PurchaseData(item=upload_item, amount=int(upload_amount), total=int(upload_total), moneyin=b_upload_moneyin, sold=b_upload_sold, buyer=upload_buyer)
 		product.put()
 		self.redirect('/')
 		
@@ -92,8 +92,30 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 class MainHandler(webapp2.RequestHandler):
     def get(self):
 		
-		self.response.out.write('<html><body><script type="text/javascript">\n')
+		self.response.out.write("""<html><style>
+			h3{
+					width: 100%;
+					height: 30px;
+					margin: 0px;
+					float: center;
+					padding: 0px;
+					background-color: white;
+			}
+			h4 {
+					float: right;
+					padding: 10px;
+					text-align: inherit;
+					background-color: white;
+				}
+		</style><body><h3 id="purchase_data"></h3><script type="text/javascript">\n""")
 		self.response.out.write('var single_price = 0;\nvar ProductList = {};\n')
+		self.response.out.write('document.getElementById("purchase_data").innerHTML ="')
+		
+		purchases = PurchaseData.query().order(PurchaseData.item)
+		for purchase in purchases:
+			self.response.out.write(purchase.item+", "+str(purchase.amount)+", "+purchase.buyer+"<br>")
+		self.response.out.write('";')
+		
 		
 		products = ItemData.query().order(ItemData.item)
 		for product in products:
@@ -125,7 +147,7 @@ class MainHandler(webapp2.RequestHandler):
 								   document.getElementById("upload_total").value = cost.toString();
 							   }
 							   </script>''')
-		self.response.out.write('<form action="/upload_purchase" method="POST" enctype="multipart/form-data" onsubmit="return checkFile()"><select name="Product_item" id="upload_item" onChange="onSelectedFunc(this)"><option value="" selected disabled hidden>Choose here</option>')
+		self.response.out.write('<h4><form action="/upload_purchase" method="POST" enctype="multipart/form-data" onsubmit="return checkFile()"><select name="Product_item" id="upload_item" onChange="onSelectedFunc(this)"><option value="" selected disabled hidden>Choose here</option>')
 		
 		for product in products:	
 			self.response.out.write('<option value="%s">%s</option>' %(product.item, product.item))
@@ -140,7 +162,7 @@ class MainHandler(webapp2.RequestHandler):
 			<input type="checkbox" name="checkbox_money">money in<br>
 			<input type="checkbox" name="checkbox_sold">sold<br>
 			Buyer: <input type="text" name="product_buyer" id="upload_buyer"><br>
-			<input type="submit" name="submit" value="Submit"> </form></body></html>""")
+			<input type="submit" name="submit" value="Submit"> </form></h4></body></html>""")
 		
 
 app = webapp2.WSGIApplication([
