@@ -32,6 +32,7 @@ class PurchaseData(ndb.Model):
 	moneyin = ndb.BooleanProperty()
 	sold = ndb.BooleanProperty()
 	buyer = ndb.StringProperty()
+	note = ndb.StringProperty()
 	
 class ItemUploadFormHandler(webapp2.RequestHandler):
 	def get(self):
@@ -74,8 +75,8 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 		upload_moneyin = self.request.get('checkbox_money')
 		upload_sold = self.request.get('checkbox_sold')
 		upload_buyer = self.request.get('product_buyer')
+		upload_note = self.request.get('product_note')
 		
-		self.response.out.write(upload_item+"<br>"+upload_amount+"<br>"+upload_total+"<br>"+upload_buyer+"<br>")
 		
 		b_upload_moneyin = False;
 		b_upload_sold = False;
@@ -84,7 +85,7 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 		if (upload_sold == "on"):
 			b_upload_sold = True;
 		
-		product = PurchaseData(item=upload_item, amount=int(upload_amount), total=int(upload_total), moneyin=b_upload_moneyin, sold=b_upload_sold, buyer=upload_buyer)
+		product = PurchaseData(item=upload_item, amount=int(upload_amount), total=int(upload_total), moneyin=b_upload_moneyin, sold=b_upload_sold, buyer=upload_buyer, note=upload_note)
 		product.put()
 		self.redirect('/')
 		
@@ -107,21 +108,46 @@ class MainHandler(webapp2.RequestHandler):
 					text-align: inherit;
 					background-color: white;
 				}
-		</style><body><h3 id="purchase_data"></h3><script type="text/javascript">\n""")
-		self.response.out.write('var single_price = 0;\nvar ProductList = {};\n')
-		self.response.out.write('document.getElementById("purchase_data").innerHTML ="')
-		
+			table {
+				font-family: arial, sans-serif;
+				border-collapse: collapse;
+			}
+
+			td, th {
+				border: 1px solid #dddddd;
+				text-align: left;
+				padding: 5px;
+			}
+
+			tr:nth-child(even) {
+				background-color: #dddddd;
+			}
+		</style><body><table><br>""")
 		purchases = PurchaseData.query().order(PurchaseData.item)
+		self.response.out.write("<tr><th>Buyer</th><th>Item</th><th>Amount</th><th>Total</th><th>MoneyIn</th><th>Export</th><th>Note</th><th>Modify</th></tr>")
 		for purchase in purchases:
-			self.response.out.write(purchase.item+", "+str(purchase.amount)+", "+purchase.buyer+"<br>")
-		self.response.out.write('";')
+			self.response.out.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %(purchase.buyer, ItemData.query(ancestor=ndb.Key(ItemData, int(purchase.item))).get().item, purchase.amount, purchase.total))
+			if purchase.moneyin:
+				self.response.out.write('<td><input type="checkbox" name="checkbox_moneyin" checked></td>')
+			else:
+				self.response.out.write('<td><input type="checkbox" name="checkbox_moneyin"></td>')
+			if purchase.sold:
+				self.response.out.write('<td><input type="checkbox" name="checkbox_sold" checked></td>')
+			else:
+				self.response.out.write('<td><input type="checkbox" name="checkbox_sold"></td>')
+			self.response.out.write('<td>%s</td>' %(purchase.note))
+			self.response.out.write('<td><input type="submit" name="modify" value="Modify"></td>')
+			self.response.out.write('</tr><br>')
+		
+		self.response.out.write("""</table><script type="text/javascript">\n""")
+		self.response.out.write('var single_price = 0;\nvar ProductList = {};\n')
 		
 		
 		products = ItemData.query().order(ItemData.item)
 		for product in products:
-			self.response.out.write('ProductList["%s"] = ' %(product.item))
+			self.response.out.write('ProductList["%s"] = ' %(product.key.id()))
 			self.response.out.write('"data:image/png;base64,"+"%s";' %b64encode(product.pic))
-			self.response.out.write('ProductList["%s"+"_price"] = ' %(product.item))
+			self.response.out.write('ProductList["%s"+"_price"] = ' %(product.key.id()))
 			self.response.out.write('"%s";' %(product.price))
 		self.response.write('''
 							   function onSelectedFunc(onSelectedValue) {
@@ -150,7 +176,7 @@ class MainHandler(webapp2.RequestHandler):
 		self.response.out.write('<h4><form action="/upload_purchase" method="POST" enctype="multipart/form-data" onsubmit="return checkFile()"><select name="Product_item" id="upload_item" onChange="onSelectedFunc(this)"><option value="" selected disabled hidden>Choose here</option>')
 		
 		for product in products:	
-			self.response.out.write('<option value="%s">%s</option>' %(product.item, product.item))
+			self.response.out.write('<option value="%s">%s</option>' %(product.key.id(), product.item))
 		
 		self.response.out.write('</select><br><img id="showimg" height="100"><div id="product_price"></div>')
 		self.response.out.write('Product Amount: <select name="Product_amount" id="upload_amount" onChange="totalChangedFunc(this)"><option value="" selected disabled hidden>Choose here</option>')
@@ -162,6 +188,7 @@ class MainHandler(webapp2.RequestHandler):
 			<input type="checkbox" name="checkbox_money">money in<br>
 			<input type="checkbox" name="checkbox_sold">sold<br>
 			Buyer: <input type="text" name="product_buyer" id="upload_buyer"><br>
+			Note: <input type="text" name="product_note"><br>
 			<input type="submit" name="submit" value="Submit"> </form></h4></body></html>""")
 		
 
