@@ -89,6 +89,38 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 		product.put()
 		self.redirect('/')
 		
+class PurchaseModifyHandler(webapp2.RequestHandler):
+	def post(self):
+		modify_id = self.request.get('modify_id')
+		modify_item_id = self.request.get('modify_item_id')
+		modify_buyer = self.request.get('modify_buyer')
+		modify_item = self.request.get('modify_item')
+		modify_amount = self.request.get('modify_amount')
+		modify_total = self.request.get('modify_total')
+		modify_moneyin = self.request.get('modify_moneyin')
+		modify_sold = self.request.get('modify_sold')
+		modify_note = self.request.get('modify_note')
+		
+		
+		b_modify_moneyin = False;
+		b_modify_sold = False;
+		if (modify_moneyin == "on"):
+			b_modify_moneyin = True;
+		if (modify_sold == "on"):
+			b_modify_sold = True;
+		
+		modify_purchase = PurchaseData.query(ancestor=ndb.Key(PurchaseData, int(modify_id))).get()
+		modify_purchase.buyer = modify_buyer
+		modify_purchase.item = modify_item_id
+		modify_purchase.amount = int(modify_amount)
+		modify_purchase.total = int(modify_total)
+		modify_purchase.moneyin = b_modify_moneyin
+		modify_purchase.sold = b_modify_sold
+		modify_purchase.note = modify_note
+		
+		modify_purchase.put()
+		self.redirect('/')
+		
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
@@ -115,7 +147,7 @@ class MainHandler(webapp2.RequestHandler):
 
 			td, th {
 				border: 1px solid #dddddd;
-				text-align: left;
+				text-align: center;
 				padding: 5px;
 			}
 
@@ -124,20 +156,28 @@ class MainHandler(webapp2.RequestHandler):
 			}
 		</style><body><table><br>""")
 		purchases = PurchaseData.query().order(PurchaseData.item)
-		self.response.out.write("<tr><th>Buyer</th><th>Item</th><th>Amount</th><th>Total</th><th>MoneyIn</th><th>Export</th><th>Note</th><th>Modify</th></tr>")
+		self.response.out.write("<tr><th>Buyer</th><th>Item</th><th>Amount</th><th>Total</th><th>MoneyIn</th><th>Export</th><th>Note</th><th>Modify</th><th>Delete</th></tr>")
 		for purchase in purchases:
-			self.response.out.write("<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td>" %(purchase.buyer, ItemData.query(ancestor=ndb.Key(ItemData, int(purchase.item))).get().item, purchase.amount, purchase.total))
+			self.response.out.write('<form action="/upload_modify" method="POST" enctype="multipart/form-data">')
+			self.response.out.write("<tr><input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
+			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
+			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s"></td>' %(purchase.buyer))
+			self.response.out.write('<td><input type="text" name="modify_item" value="%s"></td>' %(ItemData.query(ancestor=ndb.Key(ItemData, int(purchase.item))).get().item))
+			self.response.out.write('<td><input type="text" name="modify_amount" value="%s"></td>' %(purchase.amount))
+			self.response.out.write('<td><input type="text" name="modify_total" value="%s"></td>' %(purchase.total))
 			if purchase.moneyin:
-				self.response.out.write('<td><input type="checkbox" name="checkbox_moneyin" checked></td>')
+				self.response.out.write('<td><input type="checkbox" name="modify_moneyin" checked></td>')
 			else:
-				self.response.out.write('<td><input type="checkbox" name="checkbox_moneyin"></td>')
+				self.response.out.write('<td><input type="checkbox" name="modify_moneyin"></td>')
 			if purchase.sold:
-				self.response.out.write('<td><input type="checkbox" name="checkbox_sold" checked></td>')
+				self.response.out.write('<td><input type="checkbox" name="modify_sold" checked></td>')
 			else:
-				self.response.out.write('<td><input type="checkbox" name="checkbox_sold"></td>')
-			self.response.out.write('<td>%s</td>' %(purchase.note))
-			self.response.out.write('<td><input type="submit" name="modify" value="Modify"></td>')
-			self.response.out.write('</tr><br>')
+				self.response.out.write('<td><input type="checkbox" name="modify_sold"></td>')
+				
+			self.response.out.write('<td><input type="text" name="modify_note" value="%s"></td>' %(purchase.note))
+			self.response.out.write('<td><input type="submit" name="modify_submit" value="Modify"></td>')
+			self.response.out.write('<td><input type="submit" name="modify_submit" value="Delete"></td>')
+			self.response.out.write('</tr></form><br>')
 		
 		self.response.out.write("""</table><script type="text/javascript">\n""")
 		self.response.out.write('var single_price = 0;\nvar ProductList = {};\n')
@@ -196,5 +236,6 @@ app = webapp2.WSGIApplication([
     ('/', MainHandler),
 	('/keyinproduct', ItemUploadFormHandler),
 	('/upload_item', ItemUploadHandler),
-	('/upload_purchase', PurchaseUploadHandler)
+	('/upload_purchase', PurchaseUploadHandler),
+	('/upload_modify', PurchaseModifyHandler)
 ], debug=True)
