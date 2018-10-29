@@ -198,7 +198,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="10"></td>' %(purchase.buyer))
+			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="8"></td>' %(purchase.buyer))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
@@ -318,6 +318,7 @@ class MainHandler(webapp2.RequestHandler):
 			}
 			#output_form {
 			  width: 70%;
+			  float: left;
 			}
 			#input_form {
 			  width: 30%;
@@ -355,7 +356,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="3"></td>' %(purchase.buyer))
+			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="8"></td>' %(purchase.buyer))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
