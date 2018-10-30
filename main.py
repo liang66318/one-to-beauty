@@ -67,8 +67,8 @@ class ItemUploadHandler(webapp2.RequestHandler):
 		product = ItemData(item=upload_name, price=int(upload_price), pic=upload_file)
 		product.put()
 		#self.redirect('/keyinproduct')
-		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/keyinproduct" />')
-		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/keyinproduct" />')
+		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/keyinproduct" />')
+		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/keyinproduct" />')
 		
 class PurchaseUploadHandler(webapp2.RequestHandler):
 	def post(self):
@@ -91,8 +91,8 @@ class PurchaseUploadHandler(webapp2.RequestHandler):
 		product = PurchaseData(item=upload_item, amount=int(upload_amount), total=int(upload_total), moneyin=b_upload_moneyin, sold=b_upload_sold, buyer=upload_buyer, note=upload_note)
 		product.put()
 		#self.redirect('/')
-		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/" />')
-		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/" />')
+		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/" />')
+		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/" />')
 		
 class PurchaseModifyHandler(webapp2.RequestHandler):
 	def post(self):
@@ -100,7 +100,7 @@ class PurchaseModifyHandler(webapp2.RequestHandler):
 		if modify_submit == 'Modify':
 			modify_id = self.request.get('modify_id')
 			modify_item_id = self.request.get('modify_item_id')
-			modify_buyer = self.request.get('modify_buyer')
+			#modify_buyer = self.request.get('modify_buyer')
 			modify_item = self.request.get('modify_item')
 			modify_amount = self.request.get('modify_amount')
 			modify_total = self.request.get('modify_total')
@@ -117,7 +117,7 @@ class PurchaseModifyHandler(webapp2.RequestHandler):
 				b_modify_sold = True;
 			
 			modify_purchase = PurchaseData.query(ancestor=ndb.Key(PurchaseData, int(modify_id))).get()
-			modify_purchase.buyer = modify_buyer
+			#modify_purchase.buyer = modify_buyer
 			modify_purchase.item = modify_item_id
 			modify_purchase.amount = int(modify_amount)
 			modify_purchase.total = int(modify_total)
@@ -135,8 +135,8 @@ class PurchaseModifyHandler(webapp2.RequestHandler):
 		
 		
 		#self.redirect('/')
-		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/" />')
-		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/" />')
+		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/" />')
+		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/" />')
 		
 
 class MainHandler(webapp2.RequestHandler):
@@ -158,8 +158,6 @@ class MainHandler(webapp2.RequestHandler):
 			#input_form {
 			  width: 30%;
 			  float: right;
-			  padding: 10px;
-			  background-color: white;
 			}
 			table {
 				font-family: arial, sans-serif;
@@ -175,7 +173,7 @@ class MainHandler(webapp2.RequestHandler):
 			tr:nth-child(even) {
 				background-color: #dddddd;
 			}
-		</style><body><div id="container"><div id="output_form"><table><br>""")
+		</style><body><div id="container"><div id="output_form"><table>""")
 		
 		if Mode == 'None':
 			purchases = PurchaseData.query().order(PurchaseData.key)
@@ -198,7 +196,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="8"></td>' %(purchase.buyer))
+			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.key.id(), purchase.buyer))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
@@ -233,7 +231,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<td><input type="text" name="modify_note" value="%s" size="3"></td>' %(purchase.note))
 			self.response.out.write('<td><input type="submit" name="modify_submit" value="Modify"></td>')
 			self.response.out.write('<td><input type="submit" name="modify_submit" value="Delete"></td>')
-			self.response.out.write('</form></tr><br>')
+			self.response.out.write('</form></tr>')
 			
 			
 		self.response.out.write('</table></div>')
@@ -242,7 +240,7 @@ class MainHandler(webapp2.RequestHandler):
 		for product in products:	
 			self.response.out.write('<option value="%s">%s</option>' %(product.key.id(), product.item))
 		
-		self.response.out.write('</select><br><img id="showimg" height="100"><div id="product_price"></div>')
+		self.response.out.write('</select><img id="showimg" height="100"><div id="product_price"></div>')
 		self.response.out.write('Product Amount: <select name="Product_amount" id="upload_amount" onChange="totalChangedFunc(this)"><option value="" selected disabled hidden>Choose here</option>')
 		for x in range(1,11):
 			self.response.out.write('<option value="%s">%s</option>' %(str(x),str(x)))
@@ -307,6 +305,10 @@ class MainHandler(webapp2.RequestHandler):
 								   var single_price1 = parseInt(ProductList[item_getid.options[item_getid.selectedIndex].value+"_price"]);
 								   var cost = amount1 * single_price1;
 								   document.getElementById("modify_total_"+modify_form_id).value = cost.toString();
+							   }
+							   function buyer_Data(onSelcetedID){
+								   var modify_buyer_id = onSelcetedID.id.split("_")[1];
+								   alert(modify_buyer_id);
 							   }
 							   </script></body></html>''')
 	def get(self):
@@ -323,8 +325,6 @@ class MainHandler(webapp2.RequestHandler):
 			#input_form {
 			  width: 30%;
 			  float: right;
-			  padding: 10px;
-			  background-color: white;
 			}
 			table {
 				font-family: arial, sans-serif;
@@ -340,7 +340,7 @@ class MainHandler(webapp2.RequestHandler):
 			tr:nth-child(even) {
 				background-color: #dddddd;
 			}
-		</style><body><div id="container"><div id="output_form"><table><br>""")
+		</style><body><div id="container"><div id="output_form"><table>""")
 		
 		purchases = PurchaseData.query().order(PurchaseData.key)
 		
@@ -356,7 +356,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><input type="text" name="modify_buyer" value="%s" size="8"></td>' %(purchase.buyer))
+			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.key.id(), purchase.buyer))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
@@ -391,7 +391,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<td><input type="text" name="modify_note" value="%s" size="3"></td>' %(purchase.note))
 			self.response.out.write('<td><input type="submit" name="modify_submit" value="Modify"></td>')
 			self.response.out.write('<td><input type="submit" name="modify_submit" value="Delete"></td>')
-			self.response.out.write('</form></tr><br>')
+			self.response.out.write('</form></tr>')
 			
 			
 		self.response.out.write('</table></div>')
@@ -465,6 +465,10 @@ class MainHandler(webapp2.RequestHandler):
 								   var single_price1 = parseInt(ProductList[item_getid.options[item_getid.selectedIndex].value+"_price"]);
 								   var cost = amount1 * single_price1;
 								   document.getElementById("modify_total_"+modify_form_id).value = cost.toString();
+							   }
+							   function buyer_Data(onSelcetedID){
+								   var modify_buyer_id = onSelcetedID.id.split("_")[1];
+								   alert(modify_buyer_id);
 							   }
 							   </script></body></html>''')
 		
