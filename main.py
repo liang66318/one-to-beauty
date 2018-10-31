@@ -35,6 +35,16 @@ class PurchaseData(ndb.Model):
 	buyer = ndb.StringProperty()
 	note = ndb.StringProperty()
 	
+	
+class BuyerData(ndb.Model):
+	buyername = ndb.StringProperty()
+	freight = ndb.IntegerProperty()
+	transaction = ndb.BooleanProperty()
+	lastthree = ndb.StringProperty()
+	phonenumber = ndb.StringProperty()
+	note = ndb.StringProperty()
+	
+	
 class ItemUploadFormHandler(webapp2.RequestHandler):
 	def get(self):
 		
@@ -48,16 +58,55 @@ class ItemUploadFormHandler(webapp2.RequestHandler):
 									   alert("File upload success!");
 									   return true;
 								   } else {
-									   alert("You must select a file or enter a name to upload!");
+									   alert("You must select a file or enter a name or price to upload!");
 									   return false;
 								   }
 							   }
-							   </script>''')
-		self.response.out.write('<form action="/upload_item" method="POST" enctype="multipart/form-data" onsubmit="return checkFile()">')
-		self.response.out.write("""Product Name: <input type="text" name="product_name" id="upload_name"><br>
+							   function checkFile1() {
+								   var fileElement = document.getElementById("buyer_name");
+								   var fileElement1 = document.getElementById("phonenumber");
+								   if (fileElement.value != "" && fileElement1.value != "") {
+									   alert("File upload success!");
+									   return true;
+								   } else {
+									   alert("You must enter a name or phone number to upload!");
+									   return false;
+								   }
+							   }
+							   </script>
+			<form action="/upload_item" method="POST" enctype="multipart/form-data" onsubmit="return checkFile()">
+			Product Name: <input type="text" name="product_name" id="upload_name"><br>
 			Product Price: <input type="text" name="product_price" id="upload_price"><br>
 			Upload Product Photo: <input type="file" name="file" id="upload_file"><br> 
-			<input type="submit" name="submit" value="Submit"> </form></body></html>""")
+			<input type="submit" name="submit" value="Submit"> </form><br> <br> <br> 
+			
+			<form action="/upload_buyer" method="POST" enctype="multipart/form-data" onsubmit="return checkFile1()">
+			Buyer Name: <input type="text" name="buyer_name" id="buyer_name"><br>
+			Transaction Type: <input type="radio" name="transaction" value="facetoface"> face to face <input type="radio" name="transaction" value="shop"> shop<br>
+			Last Three Code: <input type="text" name="lastthree" size="3" maxlength="3"><br>
+			Phone Number: <input type="text" name="phonenumber" id="phonenumber"><br>
+			Note: <input type="text" name="note"><br>
+			<input type="submit" name="submit" value="Submit"> </form></body></html>''')
+			
+
+class BuyerUploadHandler(webapp2.RequestHandler):
+	def post(self):
+		upload_buyer_name = self.request.get('buyer_name')
+		upload_transaction = self.request.get('transaction')
+		upload_lastthree = self.request.get('lastthree')
+		upload_phonenumber = self.request.get('phonenumber')
+		upload_note = self.request.get('note')
+		
+		if upload_transaction == "facetoface":
+			m_upload_transaction = False
+		elif upload_transaction == "shop":
+			m_upload_transaction = True
+		
+		buyer = BuyerData(buyername=upload_buyer_name, freight=0, transaction=m_upload_transaction, lastthree=upload_lastthree, phonenumber=upload_phonenumber, note=upload_note)
+		buyer.put()
+		
+		self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://localhost:8080/keyinproduct" />')
+		#self.response.out.write('<meta http-equiv="refresh" content="0.1; url=http://one-to-beauty.appspot.com/keyinproduct" />')
 			
 class ItemUploadHandler(webapp2.RequestHandler):
 	def post(self):
@@ -173,7 +222,34 @@ class MainHandler(webapp2.RequestHandler):
 			tr:nth-child(even) {
 				background-color: #dddddd;
 			}
-		</style><body><div id="container"><div id="output_form"><table>""")
+			
+			#black_background {
+				padding-top:10%;
+				display:none;
+				position:fixed;
+				left:0;
+				top:0;
+				width:100%;
+				height:100%;
+				overflow:auto;
+				background-color:rgb(0,0,0);
+				background-color:rgba(0,0,0,0.4)
+			}
+
+			#white_content {
+				margin:auto;
+				background-color:#fff;
+				position:relative;
+				padding:0;
+				outline:0;
+				width:600px
+			}
+		</style><body><div id="container">
+		<div id="black_background">
+			<div id="white_content">
+				<p id="Buyer_Form_Modify"></p>
+			</div>
+		  </div><div id="output_form"><table>""")
 		
 		if Mode == 'None':
 			purchases = PurchaseData.query().order(PurchaseData.key)
@@ -185,6 +261,8 @@ class MainHandler(webapp2.RequestHandler):
 			purchases = PurchaseData.query().order(PurchaseData.moneyin).order(PurchaseData.sold)
 		
 		products = ItemData.query().order(ItemData.item)
+		buyers = BuyerData.query().order(BuyerData.buyername)
+		
 		self.response.out.write('<tr><form action="/" method="POST" enctype="multipart/form-data">')
 		self.response.out.write('<th><input type="submit" name="mode" value="Buyer"></th>')
 		self.response.out.write('<th><input type="submit" name="mode" value="Item"></th>')
@@ -196,7 +274,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.key.id(), purchase.buyer))
+			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.buyer, BuyerData.query(ancestor=ndb.Key(BuyerData, int(purchase.buyer))).get().buyername))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
@@ -248,8 +326,13 @@ class MainHandler(webapp2.RequestHandler):
 		self.response.out.write("""</select><br>
 			Total: <input type="text" name="product_total" id="upload_total"><br>
 			<input type="checkbox" name="checkbox_money">money in<br>
-			<input type="checkbox" name="checkbox_sold">sold<br>
-			Buyer: <input type="text" name="product_buyer" id="upload_buyer"><br>
+			<input type="checkbox" name="checkbox_sold">sold<br>""")
+			
+		self.response.out.write('Buyer: <select name="product_buyer" id="upload_buyer"><option value="" selected disabled hidden>Choose here</option>')
+		for buyer in buyers:
+			self.response.out.write('<option value="%s">%s</option>' %(buyer.key.id(), buyer.buyername))
+			
+		self.response.out.write("""</select><br>
 			Note: <input type="text" name="product_note"><br>
 			<input type="submit" name="submit" value="Submit"> </form></div>""")
 		
@@ -263,6 +346,13 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('ProductList["%s"+"_price"] = ' %(product.key.id()))
 			self.response.out.write('"%s";' %(product.price))
 		self.response.write('''
+							   var black_BG = document.getElementById('black_background');
+
+								window.onclick = function(event) {
+									if (event.target == black_BG) {
+										black_BG.style.display = "none";
+									}
+								}
 							   function onSelectedFunc(onSelectedValue) {
 								   document.getElementById("showimg").src=ProductList[onSelectedValue.value];
 								   document.getElementById("product_price").textContent="Price: "+ProductList[onSelectedValue.value+"_price"];
@@ -308,7 +398,8 @@ class MainHandler(webapp2.RequestHandler):
 							   }
 							   function buyer_Data(onSelcetedID){
 								   var modify_buyer_id = onSelcetedID.id.split("_")[1];
-								   alert(modify_buyer_id);
+								   document.getElementById('black_background').style.display='block';
+								   document.getElementById('Buyer_Form_Modify').textContent=modify_buyer_id;
 							   }
 							   </script></body></html>''')
 	def get(self):
@@ -340,11 +431,40 @@ class MainHandler(webapp2.RequestHandler):
 			tr:nth-child(even) {
 				background-color: #dddddd;
 			}
-		</style><body><div id="container"><div id="output_form"><table>""")
+			
+			#black_background {
+				padding-top:10%;
+				display:none;
+				position:fixed;
+				left:0;
+				top:0;
+				width:100%;
+				height:100%;
+				overflow:auto;
+				background-color:rgb(0,0,0);
+				background-color:rgba(0,0,0,0.4)
+			}
+
+			#white_content {
+				margin:auto;
+				background-color:#fff;
+				position:relative;
+				padding:0;
+				outline:0;
+				width:600px
+			}
+		</style><body><div id="container">
+		<div id="black_background">
+			<div id="white_content">
+				<p id="Buyer_Form_Modify"></p>
+			</div>
+		  </div><div id="output_form"><table>""")
 		
 		purchases = PurchaseData.query().order(PurchaseData.key)
 		
 		products = ItemData.query().order(ItemData.item)
+		buyers = BuyerData.query().order(BuyerData.buyername)
+		
 		self.response.out.write('<tr><form action="/" method="POST" enctype="multipart/form-data">')
 		self.response.out.write('<th><input type="submit" name="mode" value="Buyer"></th>')
 		self.response.out.write('<th><input type="submit" name="mode" value="Item"></th>')
@@ -356,7 +476,7 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('<tr><form action="/modify_purchase" method="POST" enctype="multipart/form-data">')
 			self.response.out.write("<input type='hidden' name='modify_id' value='%s'>" %(purchase.key.id()))
 			self.response.out.write("<input type='hidden' name='modify_item_id' value='%s'>" %(purchase.item))
-			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.key.id(), purchase.buyer))
+			self.response.out.write('<td><p id="buyer_%s" onclick="buyer_Data(this)">%s</p></td>' %(purchase.buyer, BuyerData.query(ancestor=ndb.Key(BuyerData, int(purchase.buyer))).get().buyername))
 			
 			
 			self.response.out.write('<td><select style="width:100px;" name="modify_item" id="modify_item_%s" onChange="onSelectedFunc1(this)">' %(purchase.key.id()))
@@ -408,9 +528,13 @@ class MainHandler(webapp2.RequestHandler):
 		self.response.out.write("""</select><br>
 			Total: <input type="text" name="product_total" id="upload_total"><br>
 			<input type="checkbox" name="checkbox_money">money in<br>
-			<input type="checkbox" name="checkbox_sold">sold<br>
-			Buyer: <input type="text" name="product_buyer" id="upload_buyer"><br>
-			Note: <input type="text" name="product_note"><br>
+			<input type="checkbox" name="checkbox_sold">sold<br>""")
+			
+		self.response.out.write('Buyer: <select name="product_buyer" id="upload_buyer"><option value="" selected disabled hidden>Choose here</option>')
+		for buyer in buyers:
+			self.response.out.write('<option value="%s">%s</option>' %(buyer.key.id(), buyer.buyername))
+			
+		self.response.out.write("""</select><br>Note: <input type="text" name="product_note"><br>
 			<input type="submit" name="submit" value="Submit"> </form></div>""")
 		
 		self.response.out.write("""<script type="text/javascript">\n""")
@@ -423,6 +547,13 @@ class MainHandler(webapp2.RequestHandler):
 			self.response.out.write('ProductList["%s"+"_price"] = ' %(product.key.id()))
 			self.response.out.write('"%s";' %(product.price))
 		self.response.write('''
+							   var black_BG = document.getElementById('black_background');
+
+								window.onclick = function(event) {
+									if (event.target == black_BG) {
+										black_BG.style.display = "none";
+									}
+								}
 							   function onSelectedFunc(onSelectedValue) {
 								   document.getElementById("showimg").src=ProductList[onSelectedValue.value];
 								   document.getElementById("product_price").textContent="Price: "+ProductList[onSelectedValue.value+"_price"];
@@ -468,7 +599,8 @@ class MainHandler(webapp2.RequestHandler):
 							   }
 							   function buyer_Data(onSelcetedID){
 								   var modify_buyer_id = onSelcetedID.id.split("_")[1];
-								   alert(modify_buyer_id);
+								   document.getElementById('black_background').style.display='block';
+								   document.getElementById('Buyer_Form_Modify').textContent=modify_buyer_id;
 							   }
 							   </script></body></html>''')
 		
@@ -479,5 +611,6 @@ app = webapp2.WSGIApplication([
 	('/keyinproduct', ItemUploadFormHandler),
 	('/upload_item', ItemUploadHandler),
 	('/upload_purchase', PurchaseUploadHandler),
-	('/modify_purchase', PurchaseModifyHandler)
+	('/modify_purchase', PurchaseModifyHandler),
+	('/upload_buyer', BuyerUploadHandler)
 ], debug=True)
